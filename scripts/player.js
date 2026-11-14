@@ -249,6 +249,19 @@ if (isPlayerPage) {
         return null;
     }
 
+    async function shouldProxyGame(url) {
+        try {
+            const ctrl = new AbortController();
+            const timer = setTimeout(() => ctrl.abort(), 4000);
+            const res = await fetch(url, { method: 'HEAD', signal: ctrl.signal });
+            clearTimeout(timer);
+            const ct = (res.headers.get('content-type') || '').toLowerCase();
+            return ct.includes('text/html') || ct.includes('xhtml');
+        } catch (e) {
+            return true;
+        }
+    }
+
     async function loadGame(url, silent = false) {
         currentUrl = url;
         if (!silent) switcher.retry = 0;
@@ -295,6 +308,13 @@ if (isPlayerPage) {
             };
             window.Ambiance?.setSource(videoFrame);
         } else {
+            if (type === 'game' && await shouldProxyGame(url)) {
+                frame.src = 'about:blank';
+                setTimeout(() => { frame.src = `../staticsjv2/embed.html#${url}`; }, 10);
+                window.Ambiance?.setSource(params.get('img'));
+                return;
+            }
+
             let finalUrl = url;
             const isYT = url.includes('youtube.com') || url.includes('youtube-nocookie.com');
 
@@ -500,7 +520,13 @@ if (isPlayerPage) {
         window.Notify?.info('Opening', 'Opening in new tab...');
         const win = window.open('about:blank', '_blank');
         if (!win) return;
-        let html = type === 'game' && !currentUrl.includes('staticsjv2/') ? await (await fetch(currentUrl)).text() : `<!DOCTYPE html><html><head><title>${title || 'Phantom'}</title><style>body{margin:0;background:#000;}</style></head><body><iframe src="${currentUrl}" style="position:fixed;top:0;left:0;width:100%;height:100%;border:none;" allowfullscreen></iframe></body></html>`;
+        let html;
+        if (type === 'game' && !frame.src.includes('staticsjv2/embed.html')) {
+            html = await (await fetch(currentUrl)).text();
+        } else {
+            const openUrl = type === 'game' ? new URL('../staticsjv2/embed.html', window.location.href).href + '#' + currentUrl : currentUrl;
+            html = `<!DOCTYPE html><html><head><title>${title || 'Phantom'}</title><style>body{margin:0;background:#000;}</style></head><body><iframe src="${openUrl}" style="position:fixed;top:0;left:0;width:100%;height:100%;border:none;" allowfullscreen></iframe></body></html>`;
+        }
         if (window.Settings?.get('openIn') === 'blob') win.location.href = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
         else { win.document.write(html); win.document.close(); }
     };
