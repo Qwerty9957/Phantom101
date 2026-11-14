@@ -6,46 +6,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>bg</title>
     <script src="../config.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js" defer></script>
-    <script type="module">
-        import * as BareMux from "https://cdn.jsdelivr.net/npm/@mercuryworkshop/bare-mux/dist/index.mjs";
-        window.BareMux = BareMux;
-        window.bareMuxReady = true;
-        window.parent.postMessage({ type: 'bg-proxy-ready' }, '*');
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@3.0.2/dist/index.js" defer></script>
 </head>
 
 <body>
     <script>
         const DEFAULT_WISP = window.SITE_CONFIG?.defaultWisp || "wss://glseries.net/wisp/";
-        let connectionInstance = null;
+        let transportInstance = null;
         let initPromise = null;
 
-        async function ensureConnection() {
-            if (connectionInstance) return connectionInstance;
+        function resolveWisp() {
+            try {
+                const s = JSON.parse(localStorage.getItem('void_settings') || '{}');
+                if (s.proxServer) return s.proxServer;
+            } catch { }
+            return localStorage.getItem("proxServer") || DEFAULT_WISP;
+        }
+
+        async function ensureTransport() {
+            if (transportInstance) return transportInstance;
             if (initPromise) return initPromise;
 
             initPromise = (async () => {
                 let retries = 0;
-                while (!window.BareMux && retries < 50) {
+                while (!window.EpoxyTransport && retries < 50) {
                     await new Promise(r => setTimeout(r, 100));
                     retries++;
                 }
 
-                if (!window.BareMux) {
-                    throw new Error('BareMux not ready');
+                if (!window.EpoxyTransport) {
+                    throw new Error('EpoxyTransport not ready');
                 }
 
-                const basePath = location.pathname.replace(/[^/]*$/, '') + '/';
-                const wispUrl = localStorage.getItem("proxServer") || DEFAULT_WISP;
+                const Transport = window.EpoxyTransport?.default || window.EpoxyTransport;
+                transportInstance = new Transport({ wisp: resolveWisp() });
+                await transportInstance.init();
 
-                connectionInstance = new BareMux.BareMuxConnection("../staticsjv2/bareworker.js");
-                await connectionInstance.setTransport(
-                    "https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport@2.1.28/dist/index.mjs",
-                    [{ wisp: wispUrl }]
-                );
-
-                return connectionInstance;
+                return transportInstance;
             })();
 
             return initPromise;
@@ -53,14 +50,18 @@
 
         async function proxyImage(url, requestId) {
             try {
-                const conn = await ensureConnection();
-                const client = new window.BareMux.BareClient(conn);
-                const response = await client.fetch(url);
+                const transport = await ensureTransport();
+                const res = await transport.request(new URL(url), 'GET', undefined, new Headers(), undefined);
 
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
+                if (!res || (res.status && (res.status < 200 || res.status >= 300))) {
+                    throw new Error(`HTTP ${res?.status}`);
                 }
 
+                const response = new Response(res.body, {
+                    status: res.status,
+                    statusText: res.statusText,
+                    headers: res.headers
+                });
                 const blob = await response.blob();
                 const reader = new FileReader();
 
@@ -102,6 +103,8 @@
                 await proxyImage(e.data.url, e.data.requestId);
             }
         });
+
+        window.parent.postMessage({ type: 'bg-proxy-ready' }, '*');
     </script>
 </body>
 

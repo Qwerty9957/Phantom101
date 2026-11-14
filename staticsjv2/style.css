@@ -1,6 +1,73 @@
 /* Browser Styles */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 
+:root {
+    /* Core colors (can be overridden by user settings) */
+    --bg: #0a0a0a;
+    --surface: #0f0f0f;
+    --surface-hover: #1a1a1a;
+    --surface-active: #252525;
+    --border: #1f1f1f;
+    --border-light: #2a2a2a;
+
+    /* Text */
+    --text: #e4e4e7;
+    --text-muted: #71717a;
+    --text-dim: #52525b;
+
+    /* Accent (customizable) */
+    --accent: #ffffff;
+    --accent-dim: rgba(255, 255, 255, 0.8);
+    --accent-glow: rgba(255, 255, 255, 0.1);
+
+    /* Status colors */
+    --success: #22c55e;
+    --warning: #f59e0b;
+    --error: #ef4444;
+    --info: #3b82f6;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+    --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.6);
+
+    /* Spacing */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
+    --space-2xl: 48px;
+
+    /* Border radius */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    --radius-full: 9999px;
+
+    /* Transitions */
+    --transition-fast: 0.1s ease;
+    --transition-normal: 0.2s ease;
+    --transition-slow: 0.3s ease;
+
+    /* Z-index layers */
+    --z-base: 1;
+    --z-dropdown: 100;
+    --z-sticky: 500;
+    --z-modal: 1000;
+    --z-toast: 2000;
+    --z-max: 9999;
+
+    /* Typography */
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+    /* Background (customizable) */
+    --bg-image: none;
+}
+
 *,
 *::before,
 *::after {
@@ -17,21 +84,6 @@ html,
     background: var(--bg);
     overflow: hidden;
     color: var(--text);
-    transition: background 0.3s ease;
-}
-
-/* Background Support */
-body.phantom-bg-active {
-    background: transparent !important;
-}
-
-body.phantom-bg-active #app {
-    background: transparent !important;
-}
-
-body.phantom-bg-active .tabs,
-body.phantom-bg-active .nav {
-    background: rgba(10, 10, 10, 0.45) !important;
 }
 
 /* Layout */
@@ -50,8 +102,6 @@ body.phantom-bg-active .nav {
     background: var(--bg);
     overflow-x: auto;
 }
-
-
 
 .tabs::-webkit-scrollbar {
     height: 0;
@@ -144,8 +194,6 @@ body.phantom-bg-active .nav {
     background: var(--bg);
 }
 
-
-
 .nav button {
     display: flex;
     align-items: center;
@@ -178,6 +226,7 @@ input.bar {
     width: 100%;
     height: 36px;
     padding: 0 40px 0 14px;
+    /* Padding right for home button */
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 8px;
@@ -219,6 +268,7 @@ input.bar::placeholder {
     background: var(--surface-hover);
 }
 
+/* Loading Bar */
 .loading-bar-container {
     height: 2px;
     background: transparent;
@@ -541,7 +591,6 @@ input.bar::placeholder {
     font-size: 12px;
 }
 
-
 .delete-wisp-btn {
     background: transparent;
     border: none;
@@ -556,112 +605,36 @@ input.bar::placeholder {
     color: #ef4444;
 }
 
-/* Settings Tabs */
-.settings-nav-tabs {
-    display: flex;
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
-    padding: 0 10px;
-}
-
-.nav-tab {
-    padding: 12px 16px;
-    background: transparent;
-    border: none;
-    border-bottom: 2px solid transparent;
-    color: var(--text-muted);
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.nav-tab:hover {
-    color: var(--text);
-}
-
-.nav-tab.active {
-    color: var(--accent);
-    border-bottom-color: var(--accent);
-}
-
-.settings-panel {
-    display: none;
-}
-
-.settings-panel.active {
-    display: block;
-}
-
-/* Background Presets Grid */
-.presets-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-    gap: 12px;
-    margin-bottom: 20px;
-}
-
-.preset-card {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    overflow: hidden;
-    cursor: pointer;
-    transition: all 0.2s;
+/* Toggle Switch */
+.toggle-switch {
+    width: 40px;
+    height: 20px;
+    background: var(--border);
+    border-radius: 10px;
     position: relative;
-    aspect-ratio: 16/9;
+    cursor: pointer;
+    transition: background 0.2s;
 }
 
-.preset-card:hover {
-    border-color: var(--border-light);
-    transform: translateY(-2px);
+.toggle-switch.active {
+    background: var(--accent);
 }
 
-.preset-card.active {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 1px var(--accent);
-}
-
-.preset-card img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.preset-info {
+.toggle-knob {
+    width: 16px;
+    height: 16px;
+    background: white;
+    border-radius: 50%;
     position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 6px 8px;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px);
-    color: #fff;
-    font-size: 11px;
-    font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.2s;
 }
 
-/* Background Active Overrides */
-body.phantom-bg-active .browser-container {
-    background: transparent !important;
+.toggle-switch.active .toggle-knob {
+    transform: translateX(20px);
 }
 
-body.phantom-bg-active .iframe-container {
-    background: transparent !important;
-}
-
-body.phantom-bg-active .iframe-loading {
-    background: rgba(10, 10, 10, 0.45) !important;
-    backdrop-filter: blur(12px);
-}
-
-body.phantom-bg-active .message-container {
-    background: rgba(10, 10, 10, 0.45) !important;
-    backdrop-filter: blur(12px);
+.flex {
+    display: flex;
 }

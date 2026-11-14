@@ -104,15 +104,6 @@ document.getElementById('search-engine-select').onchange = (e) => {
     if (window.Notify) Notify.success('Saved', 'Search engine updated');
 };
 
-document.getElementById('proxy-transport-select').value = settings.transport || "epoxy";
-document.getElementById('proxy-transport-select').onchange = (e) => {
-    settings.transport = e.target.value;
-    saveSettings(settings);
-    const transportName = e.target.value === 'libcurl' ? 'Libcurl' : 'Epoxy';
-    if (window.Notify) Notify.success('Transport Updated', `${transportName} selected. Reloading...`);
-    setTimeout(() => location.reload(), 1000);
-};
-
 const isWispAutoswitch = settings.wispAutoswitch !== false;
 if (isWispAutoswitch) document.getElementById('wisp-autoswitch-toggle').classList.add('active');
 

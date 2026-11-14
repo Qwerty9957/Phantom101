@@ -3,6 +3,16 @@ const ProxyInit = {
     WISP_SERVERS: window.SITE_CONFIG?.wispServers || [],
     BASE_PATH: (window.STATICSJ_BASE_PATH || "/staticsjv2/").replace(/\/?$/, '/'),
 
+    getCurrent() {
+        const stored = window.Settings?.get('proxServer') || localStorage.getItem("proxServer");
+        return stored || this.DEFAULT_WISP;
+    },
+
+    setCurrent(url) {
+        if (window.Settings) window.Settings.set('proxServer', url);
+        else localStorage.setItem("proxServer", url);
+    },
+
     async ping(url, timeout = 1000) {
         return new Promise(res => {
             const start = Date.now();
@@ -16,12 +26,13 @@ const ProxyInit = {
     },
 
     async findBest() {
-        const current = localStorage.getItem("proxServer") || this.DEFAULT_WISP;
+        const current = this.getCurrent();
 
         const check = await this.ping(current, 800);
         if (check.success) return current;
 
-        if (localStorage.getItem('wispAutoswitch') === 'false' || !this.WISP_SERVERS.length) return current;
+        const autoswitch = window.Settings ? window.Settings.get('wispAutoswitch') !== false : localStorage.getItem('wispAutoswitch') !== 'false';
+        if (!autoswitch || !this.WISP_SERVERS.length) return current;
 
         const results = await Promise.all(this.WISP_SERVERS.map(s => this.ping(s.url, 1500)));
         const working = results.filter(r => r.success).sort((a, b) => a.latency - b.latency);
@@ -35,34 +46,11 @@ const ProxyInit = {
             }
 
             const best = await this.findBest();
-            localStorage.setItem("proxServer", best);
+            this.setCurrent(best);
 
             if (window.Notify) {
                 window.Notify.info("Initializing", "Starting proxy service...");
             }
-
-            if (!window.BareMux) {
-                let attempts = 0;
-                while (!window.BareMux && attempts < 20) {
-                    await new Promise(r => setTimeout(r, 100));
-                    attempts++;
-                }
-            }
-            if (!window.BareMux || typeof $scramjetLoadController === 'undefined') {
-                console.log("Proxy: Base libraries not found, will retry on demand");
-                return;
-            }
-
-            const { ScramjetController } = $scramjetLoadController();
-            const scramjet = new ScramjetController({
-                prefix: this.BASE_PATH + "scramjet/",
-                files: {
-                    wasm: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.wasm.wasm",
-                    all: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.all.js",
-                    sync: "https://cdn.jsdelivr.net/gh/Destroyed12121/Staticsj@main/JS/scramjet.sync.js"
-                }
-            });
-            await scramjet.init();
 
             const settings = JSON.parse(localStorage.getItem('void_settings') || '{}');
             const offlineEnabled = settings.offlineMode !== false;
@@ -84,31 +72,13 @@ const ProxyInit = {
                         }
                     }
                 }
+            }
 
-                try {
-                    const reg = await navigator.serviceWorker.register(this.BASE_PATH + "sw.js", { scope: this.BASE_PATH });
-                    const config = {
-                        type: "config",
-                        wispurl: best,
-                        servers: [...this.WISP_SERVERS, ...JSON.parse(localStorage.getItem('customWisps') || '[]')],
-                        autoswitch: localStorage.getItem('wispAutoswitch') !== 'false'
-                    };
+            if (window.Notify) window.Notify.success("Ready", "Proxy service initialized");
 
-                    const send = () => reg.active?.postMessage(config);
-                    send(); setTimeout(send, 500);
-                } catch (e) {
-                    console.error('Proxy SW registration failed:', e);
-                }
-
-                const conn = new BareMux.BareMuxConnection(this.BASE_PATH + "bareworker.js");
-                await conn.setTransport("https://cdn.jsdelivr.net/npm/@mercuryworkshop/epoxy-transport/dist/index.mjs", [{ wisp: best }]);
-
-                if (window.Notify) window.Notify.success("Ready", "Proxy service initialized");
-
-                // Unblock Mode Notification
-                if (window.parent && window.parent.__phantomStealth && window.parent.__phantomStealth.isActive()) {
-                    window.Notify.info("Unblock Mode Active");
-                }
+            // Unblock Mode Notification
+            if (window.parent && window.parent.__phantomStealth && window.parent.__phantomStealth.isActive()) {
+                window.Notify.info("Unblock Mode Active");
             }
         } catch (e) {
             console.error(e);
@@ -116,6 +86,8 @@ const ProxyInit = {
         }
     }
 };
+
+window.ProxyInit = ProxyInit;
 
 ProxyInit.init();
 
