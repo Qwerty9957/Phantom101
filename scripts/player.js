@@ -523,14 +523,14 @@ if (isPlayerPage) {
         let html;
         if (type === 'game' && !frame.src.includes('staticsjv2/embed.html')) {
             html = await (await fetch(currentUrl)).text();
+            if (/<head[^>]*>/i.test(html) && !/<base\b/i.test(html)) html = html.replace(/<head([^>]*)>/i, `<head$1><base href="${currentUrl.replace(/"/g, '%22')}">`);
         } else {
             const openUrl = type === 'game' ? new URL('../staticsjv2/embed.html', window.location.href).href + '#' + currentUrl : currentUrl;
             html = `<!DOCTYPE html><html><head><title>${title || 'Phantom'}</title><style>body{margin:0;background:#000;}</style></head><body><iframe src="${openUrl}" style="position:fixed;top:0;left:0;width:100%;height:100%;border:none;" allowfullscreen></iframe></body></html>`;
         }
         const leaveGuard = `<script>window.addEventListener('beforeunload',function(e){e.preventDefault();e.returnValue='';});<\/script>`;
         html = /<\/body>/i.test(html) ? html.replace(/<\/body>/i, leaveGuard + '</body>') : html + leaveGuard;
-        if (window.Settings?.get('openIn') === 'blob') win.location.href = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
-        else { win.document.write(html); win.document.close(); }
+        win.location.href = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
     };
     document.getElementById('btn-download').onclick = async () => {
         window.Notify?.info('Downloading', 'Preparing download...');
