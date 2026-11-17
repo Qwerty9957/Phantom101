@@ -63,7 +63,7 @@ function isAdBlocked(url) {
     });
 }
 
-importScripts("https://cdn.jsdelivr.net/gh/Qwerty9957/Staticsj@main/JS/controller.sw.js");
+importScripts("https://cdn.jsdelivr.net/gh/Qwerty9957/Staticsj@main/JS/controller.sw.js?v=2");
 
 self.addEventListener("fetch", (event) => {
     if (isAdBlocked(event.request.url)) {

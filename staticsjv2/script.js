@@ -152,6 +152,7 @@ const notify = (type, title, message) => {
 // INITIALIZATION
 // =====================================================
 const SCRAMJET_CDN = "https://cdn.jsdelivr.net/gh/Qwerty9957/Staticsj@main/JS/";
+const SCRAMJET_VER = "2";
 
 function createTransport(wispUrl) {
     const Transport = window.EpoxyTransport?.default || window.EpoxyTransport;
@@ -181,9 +182,9 @@ async function initController() {
         transport: wispTransport,
         config: {
             prefix: basePath + "scramjet/",
-            scramjetPath: SCRAMJET_CDN + "scramjet.js",
-            injectPath: SCRAMJET_CDN + "controller.inject.js",
-            wasmPath: SCRAMJET_CDN + "scramjet.wasm.wasm",
+            scramjetPath: SCRAMJET_CDN + "scramjet.js?v=" + SCRAMJET_VER,
+            injectPath: SCRAMJET_CDN + "controller.inject.js?v=" + SCRAMJET_VER,
+            wasmPath: SCRAMJET_CDN + "scramjet.wasm.wasm?v=" + SCRAMJET_VER,
             virtualWasmPath: "scramjet.wasm.js"
         }
     });
