@@ -77,9 +77,8 @@
         } else {
             title = window.SITE_CONFIG?.fullName || title;
         }
-        const isUnblock = localStorage.getItem('phantom_unblock_all') === 'true';
-        const unblockScript = isUnblock ? `<script>window.addEventListener('beforeunload',function(e){e.preventDefault();e.returnValue='';});</script>` : '';
-        return `<!DOCTYPE html><html><head>${unblockScript}<title>${title}</title><link rel="icon" href="${icon}"><style>* {margin:0;padding:0;height:100%;overflow:hidden;} iframe{width:100%;height:100%;border:none;}</style></head><body><iframe src="${url}"></iframe></body></html>`;
+        const leaveGuard = `<script>window.addEventListener('beforeunload',function(e){e.preventDefault();e.returnValue='';});</script>`;
+        return `<!DOCTYPE html><html><head>${leaveGuard}<title>${title}</title><link rel="icon" href="${icon}"><style>* {margin:0;padding:0;height:100%;overflow:hidden;} iframe{width:100%;height:100%;border:none;}</style></head><body><iframe src="${url}"></iframe></body></html>`;
     };
 
     const tryPopup = (url) => {
