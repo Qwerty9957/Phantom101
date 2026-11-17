@@ -272,48 +272,6 @@ async function initializeBrowser() {
 }
 
 // =====================================================
-// GOOGLE SIGN-IN COMPATIBILITY
-// =====================================================
-// Chrome advertises itself to Google with Sec-CH-UA client hints, so Google
-// serves its Chrome-only sign-in flow (botguard), which hangs under Scramjet.
-// Firefox sends no client hints and works. Spoof a Firefox User-Agent and strip
-// client hints for Google-owned hosts so Google serves the working flow.
-const GOOGLE_COMPAT_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0";
-const GOOGLE_COMPAT_HOSTS = /(^|\.)(google\.com|googleapis\.com|gstatic\.com|googleusercontent\.com|recaptcha\.net|withgoogle\.com|gvt1\.com|gvt2\.com)$/i;
-
-let GoogleAuthCompatPlugin = null;
-function createGoogleAuthCompatPlugin() {
-    if (!GoogleAuthCompatPlugin) {
-        GoogleAuthCompatPlugin = class extends $scramjetController.ManagedPlugin {
-            constructor() {
-                super("google-auth-compat", []);
-            }
-            install(frame) {
-                super.install(frame);
-                this.tap(frame.hooks.fetch.request, (context, props) => {
-                    let host;
-                    try { host = props.url.hostname || new URL(String(props.url)).hostname; } catch { return; }
-                    if (!host || !GOOGLE_COMPAT_HOSTS.test(host)) return;
-
-                    const headers = props.init.headers;
-                    if (!Array.isArray(headers)) return;
-
-                    const next = [];
-                    for (const pair of headers) {
-                        const name = String(pair[0]).toLowerCase();
-                        if (name === "user-agent" || name.startsWith("sec-ch-ua")) continue;
-                        next.push(pair);
-                    }
-                    next.push(["user-agent", GOOGLE_COMPAT_UA]);
-                    props.init.headers = next;
-                });
-            }
-        };
-    }
-    return new GoogleAuthCompatPlugin();
-}
-
-// =====================================================
 // TAB MANAGEMENT
 // =====================================================
 function createFrameHandle(tab) {
@@ -325,7 +283,7 @@ function createFrameHandle(tab) {
             tab.newTab = false;
             tab.element.removeAttribute('srcdoc');
             if (!real) {
-                real = controller.createFrame(tab.element, { plugins: [tab._urlWatcher, createGoogleAuthCompatPlugin()] });
+                real = controller.createFrame(tab.element, { plugins: [tab._urlWatcher] });
             }
             real.go(url);
         },
